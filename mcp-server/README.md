@@ -40,7 +40,21 @@ It prints one line per check. Fix the failures yourself: the agent may explain a
 <!-- The exact command, so the lecturer can run your server too. -->
 
 ## Session transcript
-<!-- Paste one full session: initialize, the reply, tools/list, one good tools/call, one that fails. -->
+```
+npm run --silent mcp
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"manual","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"lecture-server","version":"1.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized"}
+
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"find_lecture","description":"Намира лекция от курса по нейния номер и връща заглавието и темите ѝ. Използвай, когато потребителят пита за конкретна лекция.","inputSchema":{"type":"object","properties":{"number":{"type":"integer","description":"Номерът на лекцията (цяло число, започва от 1)."}},"required":["number"]}},{"name":"list_lectures","description":"Връща списък с всички лекции в курса: номер и заглавие на всяка. Използвай, когато потребителят пита какви лекции има или не знае номера на лекцията.","inputSchema":{"type":"object","properties":{}}}]}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"find_lecture","arguments":{"number":2}}}
+{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"Лекция 2: Agent anatomy and MCP - Tools, the handshake, how the model picks a tool"}],"isError":false}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"find_lecture","arguments":{"number":99}}}
+{"jsonrpc":"2.0","id":4,"result":{"content":[{"type":"text","text":"Такава лекция няма"}],"isError":true}
+```
 
 ## The description experiment
-<!-- Three sentences: what you changed in the description, whether the model chose the tool differently, and why you think so. -->
+- **Добро описание** („Намира лекция от курса по нейния номер и връща заглавието и темите ѝ. Използвай, когато потребителят пита за конкретна лекция.“): на въпроса „Каква е темата на лекция 3?“ Gemini CLI (gemini-3-flash-preview) избра `find_lecture` с `number: 3` и върна правилния отговор.
+- **Лошо описание** („работа с лекции и неща за курса“): след рестарт на Gemini и същия въпрос той отново избра `find_lecture` с `number: 3`, без видима разлика в отговора.
+- **Извод:** за толкова прост въпрос описанието не промени избора, защото името `find_lecture` и схемата с полето `number` вече подсказват какво прави инструментът. Описанието би имало по-голяма роля при много инструменти със сходно предназначение или при по-неясни въпроси.

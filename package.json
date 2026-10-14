@@ -1,0 +1,7 @@
+{
+  "name": "webdev-121326001",
+  "version": "1.0.0",
+  "scripts": {
+    "mcp": "node mcp-server/server.js"
+  }
+}
