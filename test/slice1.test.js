@@ -68,8 +68,8 @@ describe('Slice 1: Authentication and Labs List', () => {
       assert.equal(labsRes.status, 200);
       assert.match(labsRes.text, /Computer Lab 1/);
       assert.match(labsRes.text, /Hardware Lab/);
-      assert.match(labsRes.text, /20/);
-      assert.match(labsRes.text, /15/);
+      assert.match(labsRes.text, /<td>20<\/td>/);
+      assert.match(labsRes.text, /<td>15<\/td>/);
     });
 
     it('AC-11 a user who signs in gets labs JSON via API', async () => {
@@ -98,6 +98,9 @@ describe('Slice 1: Authentication and Labs List', () => {
       
       assert.equal(loginRes.status, 401);
       assert.match(loginRes.text, /Wrong email or password/);
+      const after = await agent.get("/labs");
+      assert.equal(after.status, 302);
+      assert.equal(after.headers.location, "/login");
     });
 
     it('AC-12 a user who signs in with an unknown email sees Wrong email or password with 401', async () => {
@@ -109,6 +112,9 @@ describe('Slice 1: Authentication and Labs List', () => {
       
       assert.equal(loginRes.status, 401);
       assert.match(loginRes.text, /Wrong email or password/);
+      const after = await agent.get("/labs");
+      assert.equal(after.status, 302);
+      assert.equal(after.headers.location, "/login");
     });
 
     it('AC-12 a user who submits empty body sees Wrong email or password with 401', async () => {
@@ -120,6 +126,9 @@ describe('Slice 1: Authentication and Labs List', () => {
       
       assert.equal(loginRes.status, 401);
       assert.match(loginRes.text, /Wrong email or password/);
+      const after = await agent.get("/labs");
+      assert.equal(after.status, 302);
+      assert.equal(after.headers.location, "/login");
     });
   });
 
