@@ -5,17 +5,24 @@ Read this file at the start of every session. Keep it short and correct; update 
 ## Project
 <!-- One or two sentences: what the app does and for whom. Link SPEC.md. -->
 See `SPEC.md` for goals, non-goals and acceptance criteria.
+Lab Booking: students book a lab workstation for a whole-hour slot, staff manage labs and see all bookings. Stack: Node.js 20, Express, SQLite.
 
 ## Commands
 <!-- How to install, run, test. Keep these exact and working. -->
-- Install: 
-- Run: 
-- Test: 
-- Coverage: 
-- MCP server: 
+- Install: `npm install`
+- Run: `npm start` (serves http://localhost:3000)
+- Test: `npm test`
+- Coverage: `npm run coverage`
+- MCP server: `npm run mcp`
 
 ## Conventions
 <!-- Folder layout, naming, where business rules live, how errors are returned to the client. -->
+- Folders: `src/routes/` (HTTP handlers), `src/services/` (business rules), `src/data/` (the only place with SQL), `src/views/` (EJS templates), `src/ai/` (model client), `db/` (migrations and seed), `mcp-server/`, `test/`.
+- Naming: camelCase in JavaScript, snake_case for columns, plural table names (`labs`, `workstations`, `bookings`, `users`).
+- Business rules (overlaps, past times, the limit of 3, roles) live only in services; route handlers and MCP tools never repeat them.
+- Errors: the API returns `{ "error": "<readable sentence>" }` with status 400, 401, 403, 404 or 409; pages show the same sentence, never a stack trace.
+- Schema changes go in a new numbered file in `db/migrations/`; never edit one that has already run.
+- Every test title starts with its acceptance criterion id, for example `AC-1 ...`.
 
 ## Layers
 <!-- Fill in the file or folder for each layer. -->
@@ -23,6 +30,7 @@ Requests arrive two ways and both end in the same place:
 
 - HTTP route handler → service → data access → database
 - MCP tool → **the same service** → data access → database
+- Route handlers: `src/routes/`; services: `src/services/`; data access: `src/data/`; MCP tools: `mcp-server/`.
 
 A route handler reads the request and turns a result into a status code. A service holds the
 rules and knows nothing about HTTP or about MCP. Only the data layer writes SQL. An MCP tool
@@ -30,7 +38,7 @@ that talks to the database directly is a second, unguarded way into your data: n
 
 ## The model feature
 <!-- Provider, env var, and the call site. -->
-- The provider is named in exactly one file: 
+- The provider is named in exactly one file: `src/ai/assistant.js`
 - The key comes from an environment variable and is never committed or logged.
 - Every call has a timeout and a deterministic fallback, so the app still works when the provider is down or rate-limited.
 - The model's output is re-checked against real data before anything is saved or shown.
