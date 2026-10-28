@@ -25,3 +25,16 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Checkpoints: /mcp показа 2 инструмента; отговорите бяха верни.
 - Went wrong: gemini-2.5-pro и gemini-3.8-flash висяха (заявките се отказваха); работи gemini-3-flash-preview; първият ми опит с „лошо“ описание не беше чист, защото не бях рестартирал Gemini.
 - Changed by hand: смених описанието на find_lecture и го върнах.
+## 2026-10-28 · Писане на SPEC.md и AGENTS.md (Claude Code)
+- Goal: да попълня SPEC.md и AGENTS.md за Lab booking и да мина проверките на checks/ex2.mjs.
+- Delegated: чернови на goals, non-goals, constraints, критериите AC-1..AC-13, секциите за model feature, auth, MCP tools и UI, и на командите и конвенциите в AGENTS.md; разяснения какво иска всяка проверка.
+- Checkpoints: след всяка секция пусках node checks/ex2.mjs; от 11/30 стигнах до 29/31.
+- Went wrong: нямаше достъп до точния текст на шаблона и го копирах ръчно; имаше грешка в стойностите по подразбиране за стека, които прегледах и приех.
+- Changed by hand: избрах проекта, стека, GitHub като провайдър и Gemini като модел; поставих текстовете във файловете и прегледах всеки критерий.
+
+## 2026-10-28 · Проверка, че агентът чете AGENTS.md (Gemini CLI)
+- Goal: свежа сесия, която чете AGENTS.md и ми връща списъка „Always ask before".
+- Delegated: само четене на AGENTS.md, без промени по файлове.
+- Checkpoints: отговорът съвпада дума по дума със списъците „Always ask before" и „Never"; MCP командата е npm run mcp; /stats: 12,750 input и 163 output токена.
+- Went wrong: първите два опита дадоха API_KEY_INVALID, защото в codespace-а не беше зададена GEMINI_API_KEY; добавих секрета и отворих codespace-а наново.
+- Changed by hand: нищо по кода; само добавих секрета в Codespaces secrets.
