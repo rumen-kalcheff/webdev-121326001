@@ -1,0 +1,13 @@
+<header>
+  <nav>
+    <a href="/">Lab Booking</a>
+    <% if (user) { %>
+      <span>Logged in as <%= user.email %> (<%= user.role %>)</span>
+      <a href="/labs">Labs</a>
+      <a href="/logout">Logout</a>
+    <% } else { %>
+      <a href="/login">Login</a>
+    <% } %>
+  </nav>
+</header>
+<hr>
