@@ -38,3 +38,11 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Checkpoints: отговорът съвпада дума по дума със списъците „Always ask before" и „Never"; MCP командата е npm run mcp; /stats: 12,750 input и 163 output токена.
 - Went wrong: първите два опита дадоха API_KEY_INVALID, защото в codespace-а не беше зададена GEMINI_API_KEY; добавих секрета и отворих codespace-а наново.
 - Changed by hand: нищо по кода; само добавих секрета в Codespaces secrets.
+
+
+## 2026-10-28 · Slice 1: план и изграждане (Gemini CLI)
+- Goal: да построя slice 1 (AC-10 до AC-13): таблици със seed данни, вход и списък с лабораториите, достъпен само след вход.
+- Delegated: плана, таблиците users и labs със seed, входа с bcrypt и сесии, страницата /labs, защитата за /api/labs и тестовете.
+- Checkpoints: прегледах плана срещу non-goals преди одобрение; след стъпка 1 проверих таблиците с node; проверих входа с curl; npm test дава 10 passing (100% на services); в браузъра минах през AC-10 до AC-13 и изтрих ред от базата; curl без вход връща 401.
+- Went wrong: тестовете трият от таблица bookings, която не съществува; агентът махна проверката, че след грешен вход браузърът остава без достъп, и използва /20/, което съвпада и с Room 202; остави резервна парола за сесията и не регенерираше сесията; моделите се превключваха и висяха, а codespace-ът се рестартира два пъти и изгуби сесиите заедно с техния /stats.
+- Changed by hand: поправих двата слаби теста с sed и perl; написах бележката Spec vs result и промених AC-11 и AC-12 в SPEC.md.

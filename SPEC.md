@@ -60,8 +60,8 @@ Lab booking: students book a lab workstation for a time slot, and staff manage l
 
 ### Slice 1: sign-in and the list of labs
 - [AC-10] A visitor who is not signed in and opens `/labs` is redirected to `/login` and sees no lab data; the same request to `/api/labs` returns HTTP 401.
-- [AC-11] A user who signs in with a correct email and password sees every lab from the `labs` table with its name, room and number of workstations.
-- [AC-12] A user who signs in with a wrong password sees "Wrong email or password", and no session is created.
+- [AC-11] A user who signs in with a correct email and password sees every lab from the `labs` table with its name, room and number of workstations (in slice 1 stored in `labs.workstation_count`; derived from a `workstations` table in a later slice).
+- [AC-12] A user who signs in with a wrong password sees "Wrong email or password", and no session is created, and the same browser is still redirected from `/labs` to `/login`.
 - [AC-13] After a row is deleted from `labs` directly in the database, reloading `/labs` no longer shows that lab.
 
 ## Traceability
@@ -70,3 +70,14 @@ Lab booking: students book a lab workstation for a time slot, and staff manage l
 | AC-1 |  |
 
 ## Spec vs result
+Slice 1 (AC-10 to AC-13) passed. I ran each criterion myself: an unauthenticated `/labs` redirects to `/login`; `/api/labs` returns 401; a wrong password shows "Wrong email or password"; the correct password shows both seeded labs with their workstation counts; and deleting the "Hardware Lab" row directly in SQLite made it disappear from `/labs` after a reload. 10 tests pass, with 100% coverage of `src/services` and 90% overall.
+
+What the agent missed or reinterpreted:
+- Its test setup deleted from a `bookings` table that does not exist in slice 1, so every test failed until the lines were removed.
+- It dropped the check that the same browser is still redirected after a failed login, so AC-12 was only half proven, and its `/20/` assertion also matched "Room 202". I corrected both.
+- It first used a fallback session secret (`development-secret`) and did not regenerate the session on login. I asked for both to be changed.
+- It stored `workstation_count` in `labs` because slice 1 has no `workstations` table; that reinterprets "number of workstations" in AC-11.
+
+Known gaps I am leaving: logout is a GET request, an unknown email returns before bcrypt runs (a timing difference), and the pages are unstyled until Exercise 4.
+
+Spec changes I made because of this: AC-11 now says the count is stored in `labs.workstation_count` in slice 1, and AC-12 now says the same browser is still redirected from `/labs` to `/login` after a failed sign-in.
