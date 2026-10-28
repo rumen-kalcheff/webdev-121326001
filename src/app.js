@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const authRoutes = require('./routes/authRoutes');
+const labRoutes = require('./routes/labRoutes');
 
 const app = express();
 
@@ -33,18 +34,11 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/', authRoutes);
+app.use('/', labRoutes);
 
 // Root redirect
 app.get('/', (req, res) => {
   res.redirect('/labs');
-});
-
-// Placeholder for labs (since we're not supposed to implement it fully yet)
-app.get('/labs', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
-  res.send('<h1>Labs List (Placeholder)</h1><p>Welcome, ' + req.session.user.email + '</p>');
 });
 
 module.exports = app;

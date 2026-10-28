@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs - Lab Booking</title>
+</head>
+<body>
+    <%- include('partials/header', { user: locals.user }) %>
+    
+    <h1>Available Labs</h1>
+    
+    <% if (labs.length === 0) { %>
+        <p>No labs found.</p>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Room</th>
+                    <th>Workstations</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% labs.forEach(lab => { %>
+                    <tr>
+                        <td><%= lab.name %></td>
+                        <td><%= lab.room %></td>
+                        <td><%= lab.workstation_count %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</body>
+</html>
