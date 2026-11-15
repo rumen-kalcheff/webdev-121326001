@@ -84,7 +84,7 @@ This slice delivers AC-1 to AC-6 above (booking, double-booking, cancelling, pas
 - [AC-17] Even if the service check is bypassed, the database refuses a second active row for the same workstation and hour (unique index), so two simultaneous requests leave exactly one row.
 
 ### Slice 3: staff pages (AC-7, AC-8, AC-9)
-Delivered above: All bookings, adding a lab, taking a workstation out of service.
+This slice delivers AC-7, AC-8 and AC-9 above (All bookings, adding a lab, taking a workstation out of service).
 
 ### Slice 4: the assistant and the MCP tools
 - [AC-18] A booking made through the MCP tool `create_booking` follows the same rules as the HTTP API: a taken slot returns a tool error "This slot is taken", and no new row appears in `bookings`.
