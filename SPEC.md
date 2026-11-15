@@ -64,10 +64,24 @@ Lab booking: students book a lab workstation for a time slot, and staff manage l
 - [AC-12] A user who signs in with a wrong password sees "Wrong email or password", and no session is created, and the same browser is still redirected from `/labs` to `/login`.
 - [AC-13] After a row is deleted from `labs` directly in the database, reloading `/labs` no longer shows that lab.
 
+### Slice 2: book a workstation
+This slice delivers AC-1, AC-2, AC-5 and AC-6 above (booking, double-booking, past time, limit of 3) and adds these:
+- [AC-14] A visitor who is not signed in and sends `POST /api/bookings` gets HTTP 401, and no new row appears in `bookings`.
+- [AC-15] A booking request for a workstation that does not exist gets HTTP 404, and no new row appears in `bookings`.
+- [AC-16] A booking request for an hour outside 08:00-20:00 or not on the hour gets HTTP 400 with a sentence naming the allowed hours, and no new row appears in `bookings`.
+- [AC-17] Even if the service check is bypassed, the database refuses a second active row for the same workstation and hour (unique index), so two simultaneous requests leave exactly one row.
+
 ## Traceability
 | Criterion | Test |
 | --- | --- |
 | AC-1 |  |
+| AC-2 |  |
+| AC-5 |  |
+| AC-6 |  |
+| AC-14 |  |
+| AC-15 |  |
+| AC-16 |  |
+| AC-17 |  |
 
 ## Spec vs result
 Slice 1 (AC-10 to AC-13) passed. I ran each criterion myself: an unauthenticated `/labs` redirects to `/login`; `/api/labs` returns 401; a wrong password shows "Wrong email or password"; the correct password shows both seeded labs with their workstation counts; and deleting the "Hardware Lab" row directly in SQLite made it disappear from `/labs` after a reload. 10 tests pass, with 100% coverage of `src/services` and 90% overall.

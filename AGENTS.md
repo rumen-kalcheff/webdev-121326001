@@ -66,6 +66,7 @@ that talks to the database directly is a second, unguarded way into your data: n
 - adding, renaming or removing an MCP tool
 - changing a coverage threshold
 - sending user data to a third-party model
+- changing a booking rule (overlap, past time, the limit of 3, hours 08:00-20:00) or dropping the unique index on `bookings`
 
 ## Never
 - commit secrets, passwords, API keys or an OAuth client secret
