@@ -13,12 +13,28 @@
     <% if (labs.length === 0) { %>
         <p>There are no labs to book yet.</p>
     <% } else { %>
+        <section id="assistant">
+            <h2>Not sure what to pick? Ask the assistant</h2>
+            <form id="assistant-form">
+                <label for="assistant-text">What do you need?</label>
+                <input id="assistant-text" name="text" maxlength="500" placeholder="20 computers on Wednesday afternoon">
+                <button type="submit" id="assistant-submit">Suggest a slot</button>
+            </form>
+            <p id="assistant-status" hidden role="status">The assistant is thinking...</p>
+            <p id="assistant-error" hidden role="alert" style="color: red;"></p>
+            <div id="assistant-suggestion" hidden>
+                <strong>Suggestion:</strong> <span id="assistant-summary"></span>
+                <button type="button" id="assistant-use">Use this suggestion</button>
+                <small>You still confirm with the Book button.</small>
+            </div>
+        </section>
+
         <form id="book-form">
             <div>
                 <label for="workstationId">Workstation:</label>
                 <select id="workstationId" name="workstationId" required>
                     <% labs.forEach(lab => { %>
-                        <optgroup label="<%= lab.name %> (<%= lab.room %>)">
+                        <optgroup label="<%= lab.name %> (<%= lab.room %>)" data-lab-id="<%= lab.id %>">
                             <% lab.workstations.forEach(w => { %>
                                 <option value="<%= w.id %>"><%= w.name %></option>
                             <% }) %>
@@ -44,6 +60,47 @@
         <p id="error" hidden role="alert" style="color: red;"></p>
 
         <script>
+            const assistantForm = document.getElementById('assistant-form');
+            const assistantStatus = document.getElementById('assistant-status');
+            const assistantError = document.getElementById('assistant-error');
+            const assistantBox = document.getElementById('assistant-suggestion');
+            let suggestion = null;
+
+            assistantForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                assistantError.hidden = true;
+                assistantBox.hidden = true;
+                assistantStatus.hidden = false;
+                try {
+                    const res = await fetch('/api/suggestions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: document.getElementById('assistant-text').value })
+                    });
+                    const body = await res.json();
+                    if (!res.ok) throw new Error(body.error || 'The assistant could not suggest a slot');
+                    suggestion = body;
+                    document.getElementById('assistant-summary').textContent =
+                        body.lab.name + ' (' + body.lab.room + '), ' + body.date + ', ' + String(body.hour).padStart(2, '0') + ':00';
+                    assistantBox.hidden = false;
+                } catch (err) {
+                    // The booking form below keeps working whatever happens here.
+                    assistantError.textContent = err.message === 'Failed to fetch' ? 'The assistant is not answering, pick a lab and hour yourself' : err.message;
+                    assistantError.hidden = false;
+                } finally {
+                    assistantStatus.hidden = true;
+                }
+            });
+
+            document.getElementById('assistant-use').addEventListener('click', () => {
+                const group = document.querySelector('optgroup[data-lab-id="' + suggestion.lab.id + '"]');
+                if (group && group.firstElementChild) {
+                    document.getElementById('workstationId').value = group.firstElementChild.value;
+                }
+                document.getElementById('date').value = suggestion.date;
+                document.getElementById('hour').value = String(suggestion.hour);
+            });
+
             const form = document.getElementById('book-form');
             const statusBox = document.getElementById('status');
             const errorBox = document.getElementById('error');

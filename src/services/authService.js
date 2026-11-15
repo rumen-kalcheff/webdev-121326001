@@ -17,6 +17,18 @@ async function login(email, password) {
   return userWithoutHash;
 }
 
+// The user as the rest of the app sees them (never the password hash), or null.
+function getUserByEmail(email) {
+  const user = typeof email === 'string' ? userRepository.findByEmail(email) : null;
+  if (!user) {
+    return null;
+  }
+  // eslint-disable-next-line no-unused-vars
+  const { password_hash, ...userWithoutHash } = user;
+  return userWithoutHash;
+}
+
 module.exports = {
-  login
+  login,
+  getUserByEmail
 };

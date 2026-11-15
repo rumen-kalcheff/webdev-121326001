@@ -21,6 +21,17 @@ function getLabsWithWorkstations() {
   return withWorkstations(workstationRepository.findAll({ onlyInService: true }));
 }
 
+// For the MCP tool list_labs: what a lab is and how many of its workstations can be booked.
+function getLabSummaries() {
+  return getLabsWithWorkstations().map((lab) => ({
+    id: lab.id,
+    name: lab.name,
+    room: lab.room,
+    seats: lab.workstation_count,
+    workstationsInService: lab.workstations.length
+  }));
+}
+
 // For the manage page: every workstation with its status.
 function getLabsForManagement(user) {
   requireStaff(user);
@@ -54,6 +65,7 @@ function setWorkstationStatus(user, workstationId, inService) {
 module.exports = {
   getAllLabs,
   getLabsWithWorkstations,
+  getLabSummaries,
   getLabsForManagement,
   addLab,
   setWorkstationStatus

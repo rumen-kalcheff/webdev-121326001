@@ -48,7 +48,7 @@ that talks to the database directly is a second, unguarded way into your data: n
 <!-- Where it lives and how it authenticates. -->
 - Lives in `mcp-server/`, grew out of Exercise 1.
 - Every tool calls a service function; none touches the data layer or the database directly.
-- It carries a user, and enforces exactly the same authorization rules as the HTTP API.
+- It carries a user, and enforces exactly the same authorization rules as the HTTP API: the user is the one whose email is in `MCP_USER_EMAIL`; with none, every project tool returns a tool error.
 - Adding a tool means adding a row to the table in `SPEC.md` too.
 
 ## Tests and coverage

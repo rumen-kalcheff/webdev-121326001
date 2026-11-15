@@ -71,6 +71,19 @@ This slice delivers AC-1 to AC-6 above (booking, double-booking, cancelling, pas
 - [AC-16] A booking request for an hour outside 08:00-20:00 or not on the hour gets HTTP 400 with a sentence naming the allowed hours, and no new row appears in `bookings`.
 - [AC-17] Even if the service check is bypassed, the database refuses a second active row for the same workstation and hour (unique index), so two simultaneous requests leave exactly one row.
 
+### Slice 3: staff pages (AC-7, AC-8, AC-9)
+Delivered above: All bookings, adding a lab, taking a workstation out of service.
+
+### Slice 4: the assistant and the MCP tools
+- [AC-18] A booking made through the MCP tool `create_booking` follows the same rules as the HTTP API: a taken slot returns a tool error "This slot is taken", and no new row appears in `bookings`.
+- [AC-19] A student who calls the staff-only tools `list_all_bookings` or `set_workstation_status` gets a tool error "Only staff can do this" and nothing changes; a staff member gets the result.
+- [AC-20] The MCP tool `list_labs` returns every lab with its room, seat count and the number of workstations in service.
+- [AC-21] When the MCP server does not know who is calling, every project tool returns a tool error and touches no data.
+- [AC-22] A student who describes what they need gets one suggestion (lab, date, hour) labelled "Suggestion" when the model answers with a real lab and a bookable hour; no row appears in `bookings`.
+- [AC-23] When the model answers with text that is not JSON, a lab that does not exist, an hour in the past or an hour outside 08:00-20:00, the student sees "The assistant could not suggest a slot" (HTTP 422), and nothing is saved.
+- [AC-24] When the provider is slow, down or has no key, the student sees "The assistant is not answering, pick a lab and hour yourself" (HTTP 503); when it is rate-limited, "The assistant is busy, try again in a minute" (HTTP 429); the booking form still works.
+- [AC-25] A visitor who is not signed in gets HTTP 401 from `POST /api/suggestions`, and an empty request gets HTTP 400; the model is not called in either case.
+
 ## Traceability
 | Criterion | Test |
 | --- | --- |
@@ -91,6 +104,14 @@ This slice delivers AC-1 to AC-6 above (booking, double-booking, cancelling, pas
 | AC-15 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-16 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-17 | `test/bookingService.test.js` |
+| AC-18 | `test/mcpTools.test.js` |
+| AC-19 | `test/mcpTools.test.js` |
+| AC-20 | `test/mcpTools.test.js` |
+| AC-21 | `test/mcpTools.test.js` |
+| AC-22 | `test/suggestionService.test.js`, `test/suggestionApi.test.js` |
+| AC-23 | `test/suggestionService.test.js`, `test/suggestionApi.test.js` |
+| AC-24 | `test/suggestionService.test.js`, `test/suggestionApi.test.js` |
+| AC-25 | `test/suggestionApi.test.js` |
 
 ## Spec vs result
 Slice 1 (AC-10 to AC-13) passed. I ran each criterion myself: an unauthenticated `/labs` redirects to `/login`; `/api/labs` returns 401; a wrong password shows "Wrong email or password"; the correct password shows both seeded labs with their workstation counts; and deleting the "Hardware Lab" row directly in SQLite made it disappear from `/labs` after a reload. 10 tests pass, with 100% coverage of `src/services` and 90% overall.

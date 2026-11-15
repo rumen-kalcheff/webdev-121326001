@@ -4,5 +4,16 @@ class ValidationError extends Error {}
 class NotFoundError extends Error {}
 class ConflictError extends Error {}
 class ForbiddenError extends Error {}
+class UnavailableError extends Error {}
+class BusyError extends Error {}
+class UnusableAnswerError extends Error {}
 
-module.exports = { ValidationError, NotFoundError, ConflictError, ForbiddenError };
+module.exports = {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+  UnavailableError,
+  BusyError,
+  UnusableAnswerError
+};

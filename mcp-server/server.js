@@ -4,6 +4,7 @@ const rl = readline.createInterface({ input: process.stdin });
 
 const fs = require('fs');
 const path = require('path');
+const projectTools = require('./tools');
 
 function send(obj) {
   process.stdout.write(JSON.stringify(obj)  + '\n');
@@ -54,8 +55,8 @@ rl.on('line', (line) => {
             name: 'list_lectures',
             description: 'Връща списък с всички лекции в курса: номер и заглавие на всяка. Използвай, когато потребителят пита какви лекции има или не знае номера на лекцията.',                 // какво прави, какво връща, кога да се ползва
             inputSchema: { type: 'object', properties: {} }
-          }
-
+          },
+          ...projectTools.listTools()
         ]
       }
     });
@@ -63,7 +64,11 @@ rl.on('line', (line) => {
   else if (msg.method === 'tools/call') {
     const name = msg.params.name;
     const args = msg.params.arguments || {};
-    if (name === 'find_lecture') {
+    const projectResult = projectTools.callTool(projectTools.userFromEnv(), name, args);
+    if (projectResult) {
+      send({ jsonrpc: '2.0', id: msg.id, result: projectResult });
+    }
+    else if (name === 'find_lecture') {
       const lectures = JSON.parse(fs.readFileSync(path.join(__dirname, 'lectures.json'), 'utf8'));
       const found = lectures.find(l => l.number === args.number);
       if(found) {

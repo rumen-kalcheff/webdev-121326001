@@ -1,4 +1,12 @@
-const { ValidationError, NotFoundError, ConflictError, ForbiddenError } = require('../services/errors');
+const {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+  UnavailableError,
+  BusyError,
+  UnusableAnswerError
+} = require('../services/errors');
 
 // Turns the error a service raised into a status code. No rule lives here.
 function statusFor(err) {
@@ -6,6 +14,9 @@ function statusFor(err) {
   if (err instanceof ForbiddenError) return 403;
   if (err instanceof NotFoundError) return 404;
   if (err instanceof ConflictError) return 409;
+  if (err instanceof UnusableAnswerError) return 422;
+  if (err instanceof BusyError) return 429;
+  if (err instanceof UnavailableError) return 503;
   return null;
 }
 
