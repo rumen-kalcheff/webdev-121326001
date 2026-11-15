@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bookingService = require('../services/bookingService');
 const { ValidationError, NotFoundError, ConflictError } = require('../services/errors');
+const labService = require('../services/labService');
 const isAuthenticated = require('./authGuard');
 
 // Turns the error a service raised into a status code. No rule lives here.
@@ -33,6 +34,14 @@ router.post('/api/bookings', isAuthenticated, (req, res) => {
 
 router.get('/api/bookings', isAuthenticated, (req, res) => {
   res.json(bookingService.listMyBookings(req.session.user.id));
+});
+
+router.get('/book', isAuthenticated, (req, res) => {
+  res.render('book', { labs: labService.getLabsWithWorkstations() });
+});
+
+router.get('/my-bookings', isAuthenticated, (req, res) => {
+  res.render('my-bookings');
 });
 
 module.exports = router;

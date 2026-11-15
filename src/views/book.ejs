@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a workstation - Lab Booking</title>
+</head>
+<body>
+    <%- include('partials/header', { user: locals.user }) %>
+
+    <h1>Book a workstation</h1>
+
+    <% if (labs.length === 0) { %>
+        <p>There are no labs to book yet.</p>
+    <% } else { %>
+        <form id="book-form">
+            <div>
+                <label for="workstationId">Workstation:</label>
+                <select id="workstationId" name="workstationId" required>
+                    <% labs.forEach(lab => { %>
+                        <optgroup label="<%= lab.name %> (<%= lab.room %>)">
+                            <% lab.workstations.forEach(w => { %>
+                                <option value="<%= w.id %>"><%= w.name %></option>
+                            <% }) %>
+                        </optgroup>
+                    <% }) %>
+                </select>
+            </div>
+            <div>
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div>
+                <label for="hour">Hour:</label>
+                <select id="hour" name="hour" required>
+                    <% for (let h = 8; h <= 19; h++) { %>
+                        <option value="<%= h %>"><%= String(h).padStart(2, '0') %>:00</option>
+                    <% } %>
+                </select>
+            </div>
+            <button type="submit" id="submit">Book</button>
+        </form>
+        <p id="status" hidden role="status">Booking...</p>
+        <p id="error" hidden role="alert" style="color: red;"></p>
+
+        <script>
+            const form = document.getElementById('book-form');
+            const statusBox = document.getElementById('status');
+            const errorBox = document.getElementById('error');
+            const submit = document.getElementById('submit');
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                errorBox.hidden = true;
+                statusBox.hidden = false;
+                submit.disabled = true;
+                try {
+                    const res = await fetch('/api/bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(Object.fromEntries(new FormData(form)))
+                    });
+                    const body = await res.json();
+                    if (!res.ok) throw new Error(body.error || 'Could not book');
+                    window.location.href = '/my-bookings';
+                } catch (err) {
+                    errorBox.textContent = err.message === 'Failed to fetch' ? 'Could not reach the server, try again' : err.message;
+                    errorBox.hidden = false;
+                    statusBox.hidden = true;
+                    submit.disabled = false;
+                }
+            });
+        </script>
+    <% } %>
+</body>
+</html>

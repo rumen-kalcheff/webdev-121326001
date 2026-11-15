@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My bookings - Lab Booking</title>
+</head>
+<body>
+    <%- include('partials/header', { user: locals.user }) %>
+
+    <h1>My bookings</h1>
+
+    <p id="loading">Loading your bookings...</p>
+    <p id="error" hidden role="alert" style="color: red;"></p>
+    <p id="empty" hidden>You have no bookings yet. <a href="/book">Book a workstation</a>.</p>
+    <table id="list" hidden>
+        <thead>
+            <tr><th>Date</th><th>Hour</th><th>Lab</th><th>Room</th><th>Workstation</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        (async () => {
+            const show = (id) => { document.getElementById(id).hidden = false; };
+            try {
+                const res = await fetch('/api/bookings');
+                const body = await res.json();
+                if (!res.ok) throw new Error(body.error || 'Could not load your bookings');
+                if (body.length === 0) {
+                    show('empty');
+                } else {
+                    const tbody = document.querySelector('#list tbody');
+                    body.forEach((b) => {
+                        const tr = document.createElement('tr');
+                        [b.date, String(b.hour).padStart(2, '0') + ':00', b.lab, b.room, b.workstation].forEach((text) => {
+                            const td = document.createElement('td');
+                            td.textContent = text;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    show('list');
+                }
+            } catch (err) {
+                const box = document.getElementById('error');
+                box.textContent = err.message === 'Failed to fetch' ? 'Could not reach the server, try again' : err.message;
+                show('error');
+            } finally {
+                document.getElementById('loading').hidden = true;
+            }
+        })();
+    </script>
+</body>
+</html>
