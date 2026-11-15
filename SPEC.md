@@ -46,6 +46,18 @@ Lab booking: students book a lab workstation for a time slot, and staff manage l
 - Screens: Login (email and password, "Sign in with GitHub"); Labs list; Book a workstation (form plus the assistant's suggestion); My bookings (list with cancel); All bookings (staff only); Manage labs and workstations (staff only).
 
 ## Architecture
+One request, `POST /api/bookings`, through every layer:
+
+1. `src/app.js` mounts the session and `src/routes/bookingRoutes.js`. In front of the handler, `src/routes/authGuard.js` turns a missing session into a 401 before any rule runs.
+2. `src/routes/bookingRoutes.js` reads `workstationId`, `date` and `hour` from the body, calls `bookingService.createBooking(req.session.user.id, ...)` and names 201. It holds no rule; when the service throws, `src/routes/httpErrors.js` maps the error class to 400, 403, 404, 409, 422, 429 or 503 and sends `{ "error": "<sentence>" }`.
+3. `src/services/bookingService.js` holds the rules: workstation exists and is in service, the slot is a bookable hour (`src/services/slotRules.js`, shared with the assistant), the limit of 3, the slot is free. It throws the classes of `src/services/errors.js`, which carry a sentence and know nothing about HTTP.
+4. `src/data/bookingRepository.js` is the only place with the SQL for `bookings`. The rule "one active booking per workstation, day and hour" is also enforced by the unique index in `db/migrations/002_bookings.sql`, so two simultaneous requests cannot both succeed.
+5. The shape that crosses back to the client is the new row as JSON with 201, or `{ "error": "<sentence>" }`.
+6. In the browser, `src/views/book.ejs` is the view (form `#book-form`). Its submit handler holds the state (button disabled, `#status` while waiting, `#error` on failure), makes the REST call with `fetch('/api/bookings')`, and on success goes to `src/views/my-bookings.ejs`, which loads `GET /api/bookings` and shows loading, empty or list.
+
+The same rules have a second front door: `mcp-server/tools.js` (`create_booking`) calls `bookingService.createBooking` too and writes no SQL. The model feature sits beside it: `src/services/suggestionService.js` asks `src/ai/assistant.js`, the only file that names the provider, and checks the answer with `slotRules.js` before showing it.
+
+Where this codebase does not match its own layering: the browser side has no layers. In `src/views/book.ejs` and `src/views/my-bookings.ejs` the view, the state and the REST calls live in one inline script each, with the state kept in the DOM (`hidden` flags), instead of separate files for drawing, state and API calls. I left it that way because the SPEC chooses server-rendered EJS without a frontend framework and each screen has a single call; it would be worth splitting if a screen grows a second one.
 
 ## Acceptance criteria
 - [AC-1] A student who books a workstation for an hour that is already booked sees "This slot is taken" (HTTP 409), and no new row appears in `bookings`.
