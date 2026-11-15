@@ -3,6 +3,7 @@ const session = require('express-session');
 const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const labRoutes = require('./routes/labRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', authRoutes);
 app.use('/', labRoutes);
+app.use('/', bookingRoutes);
 
 // Root redirect
 app.get('/', (req, res) => {
