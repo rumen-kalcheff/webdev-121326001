@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const db = require('../src/data/db');
 const { applySchemaAndSeed } = require('../db/init');
 const bookingService = require('../src/services/bookingService');
-const { NotFoundError, ValidationError, ConflictError } = require('../src/services/errors');
+const { NotFoundError, ValidationError, ConflictError, ForbiddenError } = require('../src/services/errors');
 
 // "Now" is fixed so the tests do not depend on the real clock: 2030-01-10, 09:00 local time.
 const NOW = new Date(2030, 0, 10, 9, 0, 0);
@@ -132,5 +132,45 @@ describe('Slice 2: booking service rules', () => {
     assert.throws(() => insert.run(otherStudentId, FUTURE, 'active'), /UNIQUE/);
     insert.run(otherStudentId, FUTURE, 'cancelled');
     assert.equal(bookingRows().length, 2);
+  });
+  describe('cancelBooking', () => {
+    const rowOf = (id) => db.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+
+    it('AC-3 the owner cancels their booking and its row gets status cancelled', () => {
+      const booking = bookingService.createBooking(studentId, { workstationId: 1, date: FUTURE, hour: 10 }, NOW);
+      bookingService.cancelBooking({ id: studentId, role: 'student' }, booking.id);
+      assert.equal(rowOf(booking.id).status, 'cancelled');
+      assert.equal(bookingService.listMyBookings(studentId).length, 0);
+    });
+
+    it('AC-3 a cancelled slot can be booked again', () => {
+      const booking = bookingService.createBooking(studentId, { workstationId: 1, date: FUTURE, hour: 10 }, NOW);
+      bookingService.cancelBooking({ id: studentId, role: 'student' }, booking.id);
+      bookingService.createBooking(otherStudentId, { workstationId: 1, date: FUTURE, hour: 10 }, NOW);
+      assert.equal(bookingRows().filter((r) => r.status === 'active').length, 1);
+    });
+
+    it('AC-4 a student who cancels another student\'s booking is refused and the row is unchanged', () => {
+      const booking = bookingService.createBooking(studentId, { workstationId: 1, date: FUTURE, hour: 10 }, NOW);
+      const before = rowOf(booking.id);
+      assert.throws(
+        () => bookingService.cancelBooking({ id: otherStudentId, role: 'student' }, booking.id),
+        (err) => err instanceof ForbiddenError && err.message === 'You can only cancel your own bookings'
+      );
+      assert.deepEqual(rowOf(booking.id), before);
+    });
+
+    it('AC-4 a staff member may cancel any booking', () => {
+      const booking = bookingService.createBooking(studentId, { workstationId: 1, date: FUTURE, hour: 10 }, NOW);
+      bookingService.cancelBooking({ id: otherStudentId, role: 'staff' }, booking.id);
+      assert.equal(rowOf(booking.id).status, 'cancelled');
+    });
+
+    it('AC-4 cancelling a booking that does not exist is refused with NotFound', () => {
+      assert.throws(
+        () => bookingService.cancelBooking({ id: studentId, role: 'student' }, 99999),
+        (err) => err instanceof NotFoundError
+      );
+    });
   });
 });

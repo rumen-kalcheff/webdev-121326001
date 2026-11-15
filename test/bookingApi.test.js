@@ -108,4 +108,55 @@ describe('Slice 2: bookings API', () => {
     assert.equal(res.status, 400);
     assert.equal(rows().length, 0);
   });
+
+  describe('cancelling', () => {
+    let otherAgent;
+
+    beforeEach(async () => {
+      otherAgent = request.agent(app);
+      await otherAgent.post('/login').send({ email: 'staff@example.com', password: 'admin123' });
+    });
+
+    it('AC-3 a student who cancels their own booking gets 204, the row is cancelled and the list no longer shows it', async () => {
+      const created = await book({ workstationId: 1, date: FUTURE, hour: 10 });
+      const res = await agent.delete(`/api/bookings/${created.body.id}`);
+      assert.equal(res.status, 204);
+      assert.equal(db.prepare('SELECT status FROM bookings WHERE id = ?').get(created.body.id).status, 'cancelled');
+      assert.equal((await agent.get('/api/bookings')).body.length, 0);
+    });
+
+    it('AC-4 a student who cancels another student\'s booking gets 403 and the row is unchanged', async () => {
+      const hash = db.prepare("SELECT password_hash FROM users WHERE email = 'student@example.com'").get().password_hash;
+      db.prepare("DELETE FROM users WHERE email = 'second@example.com'").run();
+      db.prepare("INSERT INTO users (email, password_hash, role) VALUES ('second@example.com', ?, 'student')").run(hash);
+      const second = request.agent(app);
+      await second.post('/login').send({ email: 'second@example.com', password: 'password123' });
+
+      const created = await book({ workstationId: 1, date: FUTURE, hour: 10 });
+      const before = db.prepare('SELECT * FROM bookings WHERE id = ?').get(created.body.id);
+
+      const res = await second.delete(`/api/bookings/${created.body.id}`);
+      assert.equal(res.status, 403);
+      assert.deepEqual(res.body, { error: 'You can only cancel your own bookings' });
+      assert.deepEqual(db.prepare('SELECT * FROM bookings WHERE id = ?').get(created.body.id), before);
+    });
+
+    it('AC-4 a visitor who is not signed in gets 401 and the row is unchanged', async () => {
+      const created = await book({ workstationId: 1, date: FUTURE, hour: 10 });
+      const res = await request(app).delete(`/api/bookings/${created.body.id}`);
+      assert.equal(res.status, 401);
+      assert.equal(db.prepare('SELECT status FROM bookings WHERE id = ?').get(created.body.id).status, 'active');
+    });
+
+    it('AC-4 a staff member may cancel a student\'s booking', async () => {
+      const created = await book({ workstationId: 1, date: FUTURE, hour: 10 });
+      const res = await otherAgent.delete(`/api/bookings/${created.body.id}`);
+      assert.equal(res.status, 204);
+    });
+
+    it('AC-4 cancelling a booking that does not exist, or with a bad id, returns 404', async () => {
+      assert.equal((await agent.delete('/api/bookings/99999')).status, 404);
+      assert.equal((await agent.delete('/api/bookings/abc')).status, 404);
+    });
+  });
 });

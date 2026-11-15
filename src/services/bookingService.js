@@ -1,6 +1,6 @@
 const bookingRepository = require('../data/bookingRepository');
 const workstationRepository = require('../data/workstationRepository');
-const { ValidationError, NotFoundError, ConflictError } = require('./errors');
+const { ValidationError, NotFoundError, ConflictError, ForbiddenError } = require('./errors');
 
 const FIRST_HOUR = 8;
 const LAST_HOUR = 19; // the last slot starts at 19:00 and ends at 20:00
@@ -63,4 +63,16 @@ function listMyBookings(userId) {
   return bookingRepository.findActiveByUser(userId);
 }
 
-module.exports = { createBooking, listMyBookings };
+// `user` is { id, role }: the owner of a booking and staff may cancel it, nobody else.
+function cancelBooking(user, bookingId) {
+  const booking = bookingRepository.findById(bookingId);
+  if (!booking) {
+    throw new NotFoundError('Booking not found');
+  }
+  if (booking.user_id !== user.id && user.role !== 'staff') {
+    throw new ForbiddenError('You can only cancel your own bookings');
+  }
+  bookingRepository.setStatus(booking.id, 'cancelled');
+}
+
+module.exports = { createBooking, listMyBookings, cancelBooking };

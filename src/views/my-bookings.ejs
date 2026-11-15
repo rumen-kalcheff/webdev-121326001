@@ -15,12 +15,35 @@
     <p id="empty" hidden>You have no bookings yet. <a href="/book">Book a workstation</a>.</p>
     <table id="list" hidden>
         <thead>
-            <tr><th>Date</th><th>Hour</th><th>Lab</th><th>Room</th><th>Workstation</th></tr>
+            <tr><th>Date</th><th>Hour</th><th>Lab</th><th>Room</th><th>Workstation</th><th></th></tr>
         </thead>
         <tbody></tbody>
     </table>
 
     <script>
+        const showError = (message) => {
+            const box = document.getElementById('error');
+            box.textContent = message === 'Failed to fetch' ? 'Could not reach the server, try again' : message;
+            box.hidden = false;
+        };
+
+        async function cancel(id, row, button) {
+            document.getElementById('error').hidden = true;
+            button.disabled = true;
+            try {
+                const res = await fetch('/api/bookings/' + id, { method: 'DELETE' });
+                if (!res.ok) throw new Error((await res.json()).error || 'Could not cancel');
+                row.remove();
+                if (document.querySelectorAll('#list tbody tr').length === 0) {
+                    document.getElementById('list').hidden = true;
+                    document.getElementById('empty').hidden = false;
+                }
+            } catch (err) {
+                showError(err.message);
+                button.disabled = false;
+            }
+        }
+
         (async () => {
             const show = (id) => { document.getElementById(id).hidden = false; };
             try {
@@ -38,14 +61,18 @@
                             td.textContent = text;
                             tr.appendChild(td);
                         });
+                        const actionCell = document.createElement('td');
+                        const button = document.createElement('button');
+                        button.textContent = 'Cancel';
+                        button.addEventListener('click', () => cancel(b.id, tr, button));
+                        actionCell.appendChild(button);
+                        tr.appendChild(actionCell);
                         tbody.appendChild(tr);
                     });
                     show('list');
                 }
             } catch (err) {
-                const box = document.getElementById('error');
-                box.textContent = err.message === 'Failed to fetch' ? 'Could not reach the server, try again' : err.message;
-                show('error');
+                showError(err.message);
             } finally {
                 document.getElementById('loading').hidden = true;
             }

@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const bookingService = require('../services/bookingService');
-const { ValidationError, NotFoundError, ConflictError } = require('../services/errors');
+const { ValidationError, NotFoundError, ConflictError, ForbiddenError } = require('../services/errors');
 const labService = require('../services/labService');
 const isAuthenticated = require('./authGuard');
 
 // Turns the error a service raised into a status code. No rule lives here.
 function statusFor(err) {
   if (err instanceof ValidationError) return 400;
+  if (err instanceof ForbiddenError) return 403;
   if (err instanceof NotFoundError) return 404;
   if (err instanceof ConflictError) return 409;
   return null;
@@ -34,6 +35,20 @@ router.post('/api/bookings', isAuthenticated, (req, res) => {
 
 router.get('/api/bookings', isAuthenticated, (req, res) => {
   res.json(bookingService.listMyBookings(req.session.user.id));
+});
+
+router.delete('/api/bookings/:id', isAuthenticated, (req, res) => {
+  try {
+    bookingService.cancelBooking(req.session.user, Number(req.params.id));
+    res.status(204).end();
+  } catch (err) {
+    const status = statusFor(err);
+    if (!status) {
+      console.error('Cancel error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.status(status).json({ error: err.message });
+  }
 });
 
 router.get('/book', isAuthenticated, (req, res) => {

@@ -40,4 +40,8 @@ function findActiveByUser(userId) {
     .all(userId);
 }
 
-module.exports = { insert, findById, findActiveBySlot, countActiveFromSlot, findActiveByUser };
+function setStatus(id, status) {
+  db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
+}
+
+module.exports = { setStatus, insert, findById, findActiveBySlot, countActiveFromSlot, findActiveByUser };

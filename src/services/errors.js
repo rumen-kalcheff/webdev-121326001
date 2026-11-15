@@ -3,5 +3,6 @@
 class ValidationError extends Error {}
 class NotFoundError extends Error {}
 class ConflictError extends Error {}
+class ForbiddenError extends Error {}
 
-module.exports = { ValidationError, NotFoundError, ConflictError };
+module.exports = { ValidationError, NotFoundError, ConflictError, ForbiddenError };
