@@ -4,10 +4,14 @@ const path = require('path');
 const Database = require('better-sqlite3');
 
 function applySchemaAndSeed(db) {
-  // 1. Schema
-  const schemaPath = path.join(__dirname, 'migrations/001_initial_schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf8');
-  db.exec(schema);
+  // 1. Schema: every migration, in numbered order
+  const migrationsDir = path.join(__dirname, 'migrations');
+  fs.readdirSync(migrationsDir)
+    .filter((file) => file.endsWith('.sql'))
+    .sort()
+    .forEach((file) => {
+      db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+    });
 
   // 2. Seeds (only if empty)
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
@@ -26,6 +30,16 @@ function applySchemaAndSeed(db) {
     const insertLab = db.prepare('INSERT INTO labs (name, room, workstation_count) VALUES (?, ?, ?)');
     insertLab.run('Computer Lab 1', 'Room 101', 20);
     insertLab.run('Hardware Lab', 'Room 202', 15);
+  }
+
+  const workstationCount = db.prepare('SELECT COUNT(*) as count FROM workstations').get().count;
+  if (workstationCount === 0) {
+    const insertWorkstation = db.prepare('INSERT INTO workstations (lab_id, name) VALUES (?, ?)');
+    db.prepare('SELECT id, workstation_count FROM labs').all().forEach((lab) => {
+      for (let n = 1; n <= lab.workstation_count; n++) {
+        insertWorkstation.run(lab.id, `PC-${n}`);
+      }
+    });
   }
 }
 
