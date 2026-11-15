@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const app = require('../src/app');
 const db = require('../src/data/db');
-const { applySchemaAndSeed } = require('../db/init');
+const { resetDb } = require('./helpers');
 
 describe('Slice 2: booking pages', () => {
   beforeEach(() => {
-    applySchemaAndSeed(db);
+    resetDb();
   });
 
   ['/book', '/my-bookings'].forEach((path) => {

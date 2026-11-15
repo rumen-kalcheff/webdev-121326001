@@ -80,6 +80,9 @@ This slice delivers AC-1 to AC-6 above (booking, double-booking, cancelling, pas
 | AC-4 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-5 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-6 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
+| AC-7 | `test/staffService.test.js`, `test/staffApi.test.js` |
+| AC-8 | `test/staffService.test.js`, `test/staffApi.test.js` |
+| AC-9 | `test/staffService.test.js`, `test/staffApi.test.js` |
 | AC-10 | `test/slice1.test.js` |
 | AC-11 | `test/slice1.test.js` |
 | AC-12 | `test/slice1.test.js` |
@@ -88,8 +91,6 @@ This slice delivers AC-1 to AC-6 above (booking, double-booking, cancelling, pas
 | AC-15 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-16 | `test/bookingService.test.js`, `test/bookingApi.test.js` |
 | AC-17 | `test/bookingService.test.js` |
-
-AC-7, AC-8 and AC-9 are not built yet (staff pages, out of service), so they have no test.
 
 ## Spec vs result
 Slice 1 (AC-10 to AC-13) passed. I ran each criterion myself: an unauthenticated `/labs` redirects to `/login`; `/api/labs` returns 401; a wrong password shows "Wrong email or password"; the correct password shows both seeded labs with their workstation counts; and deleting the "Hardware Lab" row directly in SQLite made it disappear from `/labs` after a reload. 10 tests pass, with 100% coverage of `src/services` and 90% overall.

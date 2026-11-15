@@ -6,6 +6,10 @@
       <a href="/labs">Labs</a>
       <a href="/book">Book</a>
       <a href="/my-bookings">My bookings</a>
+      <% if (user.role === 'staff') { %>
+        <a href="/all-bookings">All bookings</a>
+        <a href="/manage">Manage</a>
+      <% } %>
       <a href="/logout">Logout</a>
     <% } else { %>
       <a href="/login">Login</a>

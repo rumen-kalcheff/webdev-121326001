@@ -3,17 +3,26 @@ const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 
-function applySchemaAndSeed(db) {
-  // 1. Schema: every migration, in numbered order
+function applyMigrations(db) {
+  // Schema: every migration that has not run yet, in numbered order.
+  // 001 and 002 were written to be repeatable and run once more on a database that predates
+  // this table; 003 and later run exactly once.
+  db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY)');
+  const applied = new Set(db.prepare('SELECT name FROM schema_migrations').all().map((row) => row.name));
   const migrationsDir = path.join(__dirname, 'migrations');
   fs.readdirSync(migrationsDir)
-    .filter((file) => file.endsWith('.sql'))
+    .filter((file) => file.endsWith('.sql') && !applied.has(file))
     .sort()
     .forEach((file) => {
       db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+      db.prepare('INSERT INTO schema_migrations (name) VALUES (?)').run(file);
     });
+}
 
-  // 2. Seeds (only if empty)
+function applySchemaAndSeed(db) {
+  applyMigrations(db);
+
+  // Seeds (only if empty)
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   if (userCount === 0) {
     const saltRounds = 10;
@@ -55,4 +64,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { applySchemaAndSeed };
+module.exports = { applySchemaAndSeed, applyMigrations };

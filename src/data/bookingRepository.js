@@ -44,4 +44,17 @@ function setStatus(id, status) {
   db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
 }
 
-module.exports = { setStatus, insert, findById, findActiveBySlot, countActiveFromSlot, findActiveByUser };
+function findAll() {
+  return db
+    .prepare(
+      `SELECT b.id, u.email, b.date, b.hour, b.status, w.name AS workstation, l.name AS lab
+       FROM bookings b
+       JOIN users u ON u.id = b.user_id
+       JOIN workstations w ON w.id = b.workstation_id
+       JOIN labs l ON l.id = w.lab_id
+       ORDER BY b.date, b.hour, l.name, w.id`
+    )
+    .all();
+}
+
+module.exports = { findAll, setStatus, insert, findById, findActiveBySlot, countActiveFromSlot, findActiveByUser };

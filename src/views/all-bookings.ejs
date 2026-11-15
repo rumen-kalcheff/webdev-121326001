@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All bookings - Lab Booking</title>
+</head>
+<body>
+    <%- include('partials/header', { user: locals.user }) %>
+
+    <h1>All bookings</h1>
+
+    <% if (bookings.length === 0) { %>
+        <p>Nobody has booked a workstation yet.</p>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr><th>Student</th><th>Date</th><th>Hour</th><th>Lab</th><th>Workstation</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <% bookings.forEach(b => { %>
+                    <tr>
+                        <td><%= b.email %></td>
+                        <td><%= b.date %></td>
+                        <td><%= String(b.hour).padStart(2, '0') %>:00</td>
+                        <td><%= b.lab %></td>
+                        <td><%= b.workstation %></td>
+                        <td><%= b.status %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage labs - Lab Booking</title>
+</head>
+<body>
+    <%- include('partials/header', { user: locals.user }) %>
+
+    <h1>Manage labs and workstations</h1>
+
+    <h2>Add a lab</h2>
+    <form id="lab-form">
+        <div><label for="name">Name:</label> <input id="name" name="name" required></div>
+        <div><label for="room">Room:</label> <input id="room" name="room" required></div>
+        <div><label for="workstationCount">Workstations:</label>
+            <input type="number" id="workstationCount" name="workstationCount" min="1" max="100" value="10" required></div>
+        <button type="submit">Add lab</button>
+    </form>
+    <p id="error" hidden role="alert" style="color: red;"></p>
+
+    <% if (labs.length === 0) { %>
+        <p>There are no labs yet. Add the first one above.</p>
+    <% } %>
+    <% labs.forEach(lab => { %>
+        <h2><%= lab.name %> (<%= lab.room %>)</h2>
+        <ul>
+            <% lab.workstations.forEach(w => { %>
+                <li>
+                    <%= w.name %>:
+                    <span><%= w.in_service ? 'in service' : 'out of service' %></span>
+                    <button data-id="<%= w.id %>" data-in-service="<%= w.in_service ? '0' : '1' %>">
+                        <%= w.in_service ? 'Take out of service' : 'Put back in service' %>
+                    </button>
+                </li>
+            <% }) %>
+        </ul>
+    <% }) %>
+
+    <script>
+        const errorBox = document.getElementById('error');
+        const fail = (message) => {
+            errorBox.textContent = message === 'Failed to fetch' ? 'Could not reach the server, try again' : message;
+            errorBox.hidden = false;
+        };
+
+        async function send(url, method, body) {
+            errorBox.hidden = true;
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error((await res.json()).error || 'The change failed');
+                window.location.reload();
+            } catch (err) {
+                fail(err.message);
+            }
+        }
+
+        document.getElementById('lab-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            send('/api/labs', 'POST', Object.fromEntries(new FormData(event.target)));
+        });
+
+        document.querySelectorAll('button[data-id]').forEach((button) => {
+            button.addEventListener('click', () => {
+                send('/api/workstations/' + button.dataset.id, 'PATCH', { inService: button.dataset.inService === '1' });
+            });
+        });
+    </script>
+</body>
+</html>

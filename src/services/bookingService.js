@@ -1,5 +1,6 @@
 const bookingRepository = require('../data/bookingRepository');
 const workstationRepository = require('../data/workstationRepository');
+const { requireStaff } = require('./permissions');
 const { ValidationError, NotFoundError, ConflictError, ForbiddenError } = require('./errors');
 
 const FIRST_HOUR = 8;
@@ -23,8 +24,12 @@ function isRealDate(value) {
 
 // `now` is a parameter so the rules can be tested without the real clock.
 function createBooking(userId, { workstationId, date, hour }, now = new Date()) {
-  if (!workstationRepository.findById(workstationId)) {
+  const workstation = workstationRepository.findById(workstationId);
+  if (!workstation) {
     throw new NotFoundError('Workstation not found');
+  }
+  if (!workstation.in_service) {
+    throw new ConflictError(`${workstation.name} is out of service`);
   }
 
   if (!Number.isInteger(hour) || hour < FIRST_HOUR || hour > LAST_HOUR) {
@@ -75,4 +80,9 @@ function cancelBooking(user, bookingId) {
   bookingRepository.setStatus(booking.id, 'cancelled');
 }
 
-module.exports = { createBooking, listMyBookings, cancelBooking };
+function listAllBookings(user) {
+  requireStaff(user);
+  return bookingRepository.findAll();
+}
+
+module.exports = { listAllBookings, createBooking, listMyBookings, cancelBooking };
